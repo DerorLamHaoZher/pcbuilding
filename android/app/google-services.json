@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "280979689883",
+    "project_id": "pc-bma-project",
+    "storage_bucket": "pc-bma-project.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:280979689883:android:b03ef4a56c72557e54913e",
+        "android_client_info": {
+          "package_name": "com.example.pc_bma"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwPiE-8Bj_boJu5Vlyrg87tob2m4m1Y48"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
