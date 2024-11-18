@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'tutorial.dart';
 
 void main() {
   runApp(const MyApp());
@@ -55,7 +54,60 @@ class MyTutorialPage extends StatefulWidget {
   State<MyTutorialPage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyTutorialPage> {
+class _MyHomePageState extends State<MyTutorialPage> with SingleTickerProviderStateMixin {
+
+  late AnimationController _animationController;
+
+  // List of PC parts with their images and descriptions
+  final List<Map<String, dynamic>> pcParts = [
+    {
+      'image': 'lib/assets/images/parts.png',  // Replace with your image paths
+      'description': 'This is the CPU (Central Processing Unit), the brain of your PC.',
+      'name': 'CPU',
+      'position': const Offset(200, 50), // Adjust for each PC part's position
+    },
+    {
+      'image': 'lib/assets/images/parts.png',
+      'description': 'This is the GPU (Graphics Processing Unit), responsible for rendering graphics.',
+      'name': 'GPU',
+      'position': Offset(200, 150),
+    },
+    {
+      'image': 'lib/assets/images/parts.png',
+      'description': 'This is the RAM (Random Access Memory), for temporary data storage.',
+      'name': 'RAM',
+      'position': Offset(150, 100),
+    },
+  ];
+
+  int currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true); // Breathing effect
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _navigateLeft() {
+    setState(() {
+      currentIndex = (currentIndex - 1 + pcParts.length) % pcParts.length;
+    });
+  }
+
+  void _navigateRight() {
+    setState(() {
+      currentIndex = (currentIndex + 1) % pcParts.length;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,12 +119,12 @@ class _MyHomePageState extends State<MyTutorialPage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       body: Container(
-        padding: const EdgeInsets.all(10.10), // Adjust padding as needed
+        padding: const EdgeInsets.all(10.0),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
               Color(0xFF08FFA2),
-              Color(0xFF08BAFF), // Light green color
+              Color(0xFF08BAFF),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -81,19 +133,18 @@ class _MyHomePageState extends State<MyTutorialPage> {
         child: Column(
           children: [
             const SizedBox(height: 60.0),
-            // New Container to replace the AppBar
+            // AppBar-like container
             Container(
-              padding: const EdgeInsets.all(16.0), // Padding for the app bar
+              padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
-                color: Colors.white, // Background color
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(30.0),
-                // Rounded bottom corners
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.5), // Shadow color
-                    spreadRadius: 0.5, // Spread of the shadow
-                    blurRadius: 5, // Blur intensity
-                    offset: const Offset(0, 3), // Shadow position offset (x, y)
+                    color: Colors.black.withOpacity(0.5),
+                    spreadRadius: 0.5,
+                    blurRadius: 5,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
@@ -101,25 +152,24 @@ class _MyHomePageState extends State<MyTutorialPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'PC BMA', // Replace with your app title
+                    'PC BMA',
                     style: TextStyle(
-                      color:  Color(0xFF010B73),
-                      fontSize: 30.0, // Adjust title font size
+                      color: Color(0xFF010B73),
+                      fontSize: 30.0,
                       fontFamily: 'bombardment',
                       shadows: [
                         Shadow(
-                          blurRadius: 2.0, // shadow blur
-                          color: Colors.black, // shadow color
-                          offset: Offset(1.0, 1.0), // how much shadow will be shown
+                          blurRadius: 2.0,
+                          color: Colors.black,
+                          offset: Offset(1.0, 1.0),
                         ),
                       ],
                     ),
                   ),
-                  // Optionally add an action icon
                   IconButton(
-                    icon: Icon(Icons.settings), // Replace with your desired icon
+                    icon: Icon(Icons.settings),
                     onPressed: () {
-                      // Add action here
+                      // Settings action
                     },
                   ),
                 ],
@@ -127,196 +177,119 @@ class _MyHomePageState extends State<MyTutorialPage> {
             ),
             const SizedBox(height: 30.0),
 
-            // Scrollable content
+            // Main content with Stack to show the image and breathing circle
             Expanded(
               child: SingleChildScrollView(
                 child: Container(
-                  padding: const EdgeInsets.all(10.10), // Adjust padding as needed
+                  padding: const EdgeInsets.all(20.0),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(30.0),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.5), // Shadow color
-                        spreadRadius: 0.5, // Spread of the shadow
-                        blurRadius: 5, // Blur intensity
-                        offset: const Offset(3, 3), // Shadow position offset (x, y)
+                        color: Colors.black.withOpacity(0.5),
+                        spreadRadius: 0.5,
+                        blurRadius: 5,
+                        offset: const Offset(3, 3),
                       ),
                     ],
                   ),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        // Buttons
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Color(0xFF08FFA2),
-                                Color(0xFF08BAFF), // End color for gradient
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(30.0),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.5), // Shadow color
-                                spreadRadius: 0.5, // Spread of the shadow
-                                blurRadius: 5, // Blur intensity
-                                offset: const Offset(3, 3), // Shadow position offset (x, y)
-                              ),
-                            ],
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Display the PC part image with the breathing effect
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Image of the selected PC part
+                          Image.asset(
+                            pcParts[currentIndex]['image']!,
+                            height: 440.0,
+                            fit: BoxFit.contain,
                           ),
-                          child: TextButton(
-                            onPressed: () {
-
-                            },
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.black, // Text color
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 20.0, horizontal: 30.0), // Adjust padding
-                              textStyle: const TextStyle(
-                                fontFamily: 'nasalization',
-                                fontSize: 25.0, // Adjust font size
+                          // Pulsating circle effect
+                          ScaleTransition(
+                            scale: Tween<double>(begin: 1.0, end: 1.5).animate(
+                              CurvedAnimation(
+                                parent: _animationController,
+                                curve: Curves.easeInOut,
                               ),
                             ),
-                            child: const Text('Tutorial'),
-                          ),
-                        ),
-                        const SizedBox(height: 30.0),
-
-                        // More buttons...
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Color(0xFF08FFA2),
-                                Color(0xFF08BAFF), // End color for gradient
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(30.0),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.5), // Shadow color
-                                spreadRadius: 0.5, // Spread of the shadow
-                                blurRadius: 5, // Blur intensity
-                                offset: const Offset(3, 3), // Shadow position offset (x, y)
-                              ),
-                            ],
-                          ),
-                          child: TextButton(
-                            onPressed: () {},
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.black, // Text color
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 30.0, horizontal: 30.0), // Adjust padding
-                              textStyle: const TextStyle(
-                                fontFamily: 'nasalization',
-                                fontSize: 60.0, // Adjust font size
-                              ),
-                            ),
-                            child: const Text('Proceed to Tutorial?'),
-                          ),
-                        ),
-                        const SizedBox(height: 30.0),
-
-                        // Another button...
-                        // Replace the "Recommended Build" button with two Yes and No buttons
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between the buttons
-                          children: <Widget>[
-                            // Yes button
-                            Container(
+                            child: Container(
+                              width: 30.0,
+                              height: 20.0,
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Color(0xFF08FFA2),
-                                    Color(0xFF08BAFF), // End color for gradient
-                                  ],
-                                  begin: Alignment.bottomRight,
-                                  end: Alignment.topLeft,
-                                ),
-                                borderRadius: BorderRadius.circular(30.0),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.5), // Shadow color
-                                    spreadRadius: 0.5, // Spread of the shadow
-                                    blurRadius: 5, // Blur intensity
-                                    offset: const Offset(3, 3), // Shadow position offset (x, y)
-                                  ),
-                                ],
+                                shape: BoxShape.circle,
+                                color: Colors.blue.withOpacity(0.5),
                               ),
-                              child: TextButton(
-                                onPressed: () {
-                                  // Add "Yes" button action here
-                                },
-                                style: TextButton.styleFrom(
-                                  foregroundColor: Colors.black, // Text color
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 20.0, horizontal: 30.0), // Adjust padding
-                                  textStyle: const TextStyle(
+                              child: Center(
+                                child: Text(
+                                  pcParts[currentIndex]['name']!,
+                                  style: const TextStyle(
+                                    color: Colors.yellow,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10.0,
                                     fontFamily: 'nasalization',
-                                    fontSize: 25.0, // Adjust font size
                                   ),
-                                ),
-                                child: const Text(
-                                  'Yes',
-                                  textAlign: TextAlign.center,
                                 ),
                               ),
                             ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20.0),
 
-                            const SizedBox(width: 20.0), // Space between Yes and No buttons
-
-                            // No button
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Color(0xFF08FFA2),
-                                    Color(0xFF08BAFF), // End color for gradient
-                                  ],
-                                  begin: Alignment.bottomRight,
-                                  end: Alignment.topLeft,
-                                ),
-                                borderRadius: BorderRadius.circular(30.0),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.5), // Shadow color
-                                    spreadRadius: 0.5, // Spread of the shadow
-                                    blurRadius: 5, // Blur intensity
-                                    offset: const Offset(3, 3), // Shadow position offset (x, y)
-                                  ),
-                                ],
-                              ),
-                              child: TextButton(
-                                onPressed: () {
-                                  // Add "No" button action here
-                                },
-                                style: TextButton.styleFrom(
-                                  foregroundColor: Colors.black, // Text color
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 20.0, horizontal: 30.0), // Adjust padding
-                                  textStyle: const TextStyle(
-                                    fontFamily: 'nasalization',
-                                    fontSize: 25.0, // Adjust font size
-                                  ),
-                                ),
-                                child: const Text(
-                                  'No',
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                          ],
+                      // Description of the selected PC part
+                      Text(
+                        pcParts[currentIndex]['description']!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                          fontFamily: 'nasalization',
                         ),
+                      ),
+                      const SizedBox(height: 30.0),
 
-                      ],
-                    ),
+                      // Navigation buttons (left and right)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton(
+                            onPressed: _navigateLeft,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20.0),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 10.0, horizontal: 20.0),
+                            ),
+                            child: const Icon(
+                              Icons.arrow_left,
+                              color: Colors.white,
+                              size: 30.0,
+                            ),
+                          ),
+                          const SizedBox(width: 20.0),
+                          ElevatedButton(
+                            onPressed: _navigateRight,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20.0),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 10.0, horizontal: 20.0),
+                            ),
+                            child: const Icon(
+                              Icons.arrow_right,
+                              color: Colors.white,
+                              size: 30.0,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -324,9 +297,6 @@ class _MyHomePageState extends State<MyTutorialPage> {
           ],
         ),
       ),
-
-
-      // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
