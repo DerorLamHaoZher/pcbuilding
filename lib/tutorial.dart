@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'buildpc.dart';
 
 void main() {
   runApp(const MyApp());
@@ -7,27 +8,11 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
@@ -39,15 +24,6 @@ class MyApp extends StatelessWidget {
 class MyTutorialPage extends StatefulWidget {
   const MyTutorialPage({super.key, required this.title});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -55,28 +31,62 @@ class MyTutorialPage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyTutorialPage> with SingleTickerProviderStateMixin {
-
   late AnimationController _animationController;
 
-  // List of PC parts with their images and descriptions
   final List<Map<String, dynamic>> pcParts = [
     {
       'image': 'lib/assets/images/parts.png',  // Replace with your image paths
-      'description': 'This is the CPU (Central Processing Unit), the brain of your PC.',
+      'description': 'Motherboard is a printed circuit board (PCB), it allows communication between many of the crucial electronic components of a system like CPU, RAM, GPU and other else ',
+      'name': 'Motherboard',
+      'position': const Offset(160, 200), // Adjust for each PC part's position
+    },
+    {
+      'image': 'lib/assets/images/parts.png',  // Replace with your image paths
+      'description': 'CPU (Central Processor Unit) is a PC part that responsible to process all of the task in a computer.',
       'name': 'CPU',
-      'position': const Offset(200, 50), // Adjust for each PC part's position
+      'position': const Offset(160, 15), // Adjust for each PC part's position
     },
     {
       'image': 'lib/assets/images/parts.png',
-      'description': 'This is the GPU (Graphics Processing Unit), responsible for rendering graphics.',
-      'name': 'GPU',
-      'position': Offset(200, 150),
-    },
-    {
-      'image': 'lib/assets/images/parts.png',
-      'description': 'This is the RAM (Random Access Memory), for temporary data storage.',
+      'description': 'Memory as knows as RAM (Random Access Memory) a temporary memory bank where your computer stores data it needs to retrieve quickly. Since it is a volatile hardware so the data will gone once PC is off.',
       'name': 'RAM',
-      'position': Offset(150, 100),
+      'position': const Offset(150, 310),
+    },
+    {
+      'image': 'lib/assets/images/parts.png',
+      'description': 'GPU (Graphic Processor Unit) is a PC parts responsible for rendering and displaying images, videos, and animations on your computer monitor.',
+      'name': 'GPU',
+      'position': const Offset(20, 200),
+    },
+    {
+      'image': 'lib/assets/images/parts.png',
+      'description': 'Storage as known as ROM (Read Only Memory) that enable to keep and read data if needed. Since it is a non volatile hardware so the data will be keep in it after the PC is off. Now days there are two type of storage, the old, slower one called hard disk drive and the faster, newer one called Solid state drive.',
+      'name': 'ROM',
+      'position': const Offset(70, 310),
+    },
+    {
+      'image': 'lib/assets/images/parts.png',
+      'description': 'Power Supply Unit is a PC part that converts alternating current (AC) to direct current (DC) because all PC parts inside a computer requires DC power to operate. High performance PC parts might require greater wattage PSU (Power Supply Unit).',
+      'name': 'PSU',
+      'position': const Offset(55, 15),
+    },
+    {
+      'image': 'lib/assets/images/parts.png',
+      'description': 'CPU cooler is a PC part with heat sink that to draw heat away from the system CPU to prevent CPU overheating. Other PC parts do not generate too much heat so they do not equip with coolers (except for GPU, it already come with the heat sink that specific design for the certain GPU model).',
+      'name': 'CPU-Cooler',
+      'position': const Offset(90, 380),
+    },
+    {
+      'image': 'lib/assets/images/case.png',
+      'description': 'Case fan also help to remove all PC parts ’s heat by sucking out hot air from the case. It also create better air passage inside the case to maintain PC parts in operating temperature.',
+      'name': 'Case-Fan',
+      'position': const Offset(250, 190),
+    },
+    {
+      'image': 'lib/assets/images/case.png',
+      'description': 'Computer Case is a outer shell of a PC that fixed PC component like Motherboard, case fan, hard disk drive and other else to prevent damage while moving the PC.',
+      'name': 'Case',
+      'position': const Offset(130, 190),
     },
   ];
 
@@ -109,18 +119,19 @@ class _MyHomePageState extends State<MyTutorialPage> with SingleTickerProviderSt
     });
   }
 
+  void _navigateToNewPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MyBuildPCPage(title: 'Build PC',)), // Navigate to NewPage
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       body: Container(
         padding: const EdgeInsets.all(10.0),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
               Color(0xFF08FFA2),
@@ -133,7 +144,6 @@ class _MyHomePageState extends State<MyTutorialPage> with SingleTickerProviderSt
         child: Column(
           children: [
             const SizedBox(height: 60.0),
-            // AppBar-like container
             Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
@@ -167,17 +177,13 @@ class _MyHomePageState extends State<MyTutorialPage> with SingleTickerProviderSt
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.settings),
-                    onPressed: () {
-                      // Settings action
-                    },
+                    icon: const Icon(Icons.settings),
+                    onPressed: () {},
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 30.0),
-
-            // Main content with Stack to show the image and breathing circle
             Expanded(
               child: SingleChildScrollView(
                 child: Container(
@@ -195,41 +201,41 @@ class _MyHomePageState extends State<MyTutorialPage> with SingleTickerProviderSt
                     ],
                   ),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Display the PC part image with the breathing effect
                       Stack(
                         alignment: Alignment.center,
                         children: [
-                          // Image of the selected PC part
                           Image.asset(
                             pcParts[currentIndex]['image']!,
                             height: 440.0,
                             fit: BoxFit.contain,
                           ),
-                          // Pulsating circle effect
-                          ScaleTransition(
-                            scale: Tween<double>(begin: 1.0, end: 1.5).animate(
-                              CurvedAnimation(
-                                parent: _animationController,
-                                curve: Curves.easeInOut,
+                          Positioned(
+                            left: pcParts[currentIndex]['position']!.dx,
+                            top: pcParts[currentIndex]['position']!.dy,
+                            child: ScaleTransition(
+                              scale: Tween<double>(begin: 1.0, end: 1.5).animate(
+                                CurvedAnimation(
+                                  parent: _animationController,
+                                  curve: Curves.easeInOut,
+                                ),
                               ),
-                            ),
-                            child: Container(
-                              width: 30.0,
-                              height: 20.0,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.blue.withOpacity(0.5),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  pcParts[currentIndex]['name']!,
-                                  style: const TextStyle(
-                                    color: Colors.yellow,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 10.0,
-                                    fontFamily: 'nasalization',
+                              child: Container(
+                                width: 40.0,
+                                height: 40.0,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.blue.withOpacity(0.5),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    pcParts[currentIndex]['name']!,
+                                    style: const TextStyle(
+                                      color: Colors.yellow,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10.0,
+                                      fontFamily: 'nasalization',
+                                    ),
                                   ),
                                 ),
                               ),
@@ -238,22 +244,35 @@ class _MyHomePageState extends State<MyTutorialPage> with SingleTickerProviderSt
                         ],
                       ),
                       const SizedBox(height: 20.0),
-
-                      // Description of the selected PC part
+                      SizedBox(
+                        height: 100.0,
+                        child: SingleChildScrollView(
+                          child: Text(
+                            pcParts[currentIndex]['description']!,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 16.0,
+                              fontFamily: 'nasalization',
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10.0),
                       Text(
-                        pcParts[currentIndex]['description']!,
-                        textAlign: TextAlign.center,
+                        '${currentIndex + 1} of ${pcParts.length}',
                         style: const TextStyle(
-                          fontSize: 16.0,
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                           fontFamily: 'nasalization',
                         ),
                       ),
                       const SizedBox(height: 30.0),
-
-                      // Navigation buttons (left and right)
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center, // Center the left and right buttons
                         children: [
+                          // Left Arrow Button
                           ElevatedButton(
                             onPressed: _navigateLeft,
                             style: ElevatedButton.styleFrom(
@@ -261,8 +280,7 @@ class _MyHomePageState extends State<MyTutorialPage> with SingleTickerProviderSt
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20.0),
                               ),
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 10.0, horizontal: 20.0),
+                              padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                             ),
                             child: const Icon(
                               Icons.arrow_left,
@@ -271,6 +289,48 @@ class _MyHomePageState extends State<MyTutorialPage> with SingleTickerProviderSt
                             ),
                           ),
                           const SizedBox(width: 20.0),
+                                                     TextButton(
+                                                     onPressed: () {
+                                                       Navigator.push(
+                                                           context,
+                                                           MaterialPageRoute(
+                                                             builder: (context) => const MyBuildPCPage(title: 'Build PC page'),
+                                                           ),
+                                                         );
+                                                       },
+                                                       style: TextButton.styleFrom(
+                                                         padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                                                         foregroundColor: Colors.black, // Text color
+                                                         textStyle: const TextStyle(
+                                                           fontFamily: 'nasalization',
+                                                           fontSize: 25.0, // Adjust font size
+                                                         ),
+                                                       ),
+                                                       child: Ink(
+                                                         decoration: BoxDecoration(
+                                                           gradient: LinearGradient(
+                                                             colors: [
+                                                               Color(0xFF08FFA2), // Start color for gradient
+                                                               Color(0xFF08BAFF), // End color for gradient
+                                                             ],
+                                                             begin: Alignment.topLeft,
+                                                             end: Alignment.bottomRight,
+                                                           ),
+                                                           borderRadius: BorderRadius.circular(20.0), // Rounded corners
+                                                         ),
+                                                         child: Container(
+                                                           padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                                                           child: const Text(
+                                                             'Skip',
+                                                             style: TextStyle(
+                                                               fontFamily: 'nasalization',
+                                                               fontSize: 25.0,
+                                                             ),
+                                                           ),
+                                                         ),
+                                                       ),
+                                                     ),
+                          const SizedBox(width: 20.0),
                           ElevatedButton(
                             onPressed: _navigateRight,
                             style: ElevatedButton.styleFrom(
@@ -278,8 +338,7 @@ class _MyHomePageState extends State<MyTutorialPage> with SingleTickerProviderSt
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20.0),
                               ),
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 10.0, horizontal: 20.0),
+                              padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                             ),
                             child: const Icon(
                               Icons.arrow_right,
@@ -289,6 +348,7 @@ class _MyHomePageState extends State<MyTutorialPage> with SingleTickerProviderSt
                           ),
                         ],
                       ),
+
                     ],
                   ),
                 ),

@@ -246,7 +246,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       padding: const EdgeInsets.symmetric(
                           vertical: 20.0, horizontal: 30.0),
                       textStyle: const TextStyle(
-                        fontFamily: 'nasalization',
+                        fontFamily: 'bombardment',
                         fontSize: 25.0,
                       ),
                     ),
