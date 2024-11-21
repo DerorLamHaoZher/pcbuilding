@@ -66,10 +66,10 @@ def scrape_product_info():
                 product_name = product_name_element.text.strip() if product_name_element else "Unknown Product"
                 price_element = item.find_element(By.CSS_SELECTOR, '.oe_currency_value')
                 price = price_element.text.strip() if price_element else "Price not available"
-                
+
                 # Categorize the product
                 category = categorize_product(product_name)
-                
+
                 product_data.append({
                     'product_name': product_name,
                     'price': price,
