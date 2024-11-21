@@ -258,7 +258,7 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'PC Build',
+                        'PC BMA',
                         style: TextStyle(
                           color: Color(0xFF010B73),
                           fontSize: 30.0,
