@@ -50,11 +50,13 @@ class _MyRegisterPageState extends State<MyRegisterPage> {
     try {
       await AuthService().signup(email: email, password: password);
       Navigator.pushReplacement(
+        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(builder: (context) => const MyMenuPage(title: '')),
       );
     } catch (e) {
       // Display error message if signup fails
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );

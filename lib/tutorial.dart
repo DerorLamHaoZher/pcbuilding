@@ -119,12 +119,7 @@ class _MyHomePageState extends State<MyTutorialPage> with SingleTickerProviderSt
     });
   }
 
-  void _navigateToNewPage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const MyBuildPCPage(title: 'Build PC',)), // Navigate to NewPage
-    );
-  }
+  
 
   @override
   Widget build(BuildContext context) {

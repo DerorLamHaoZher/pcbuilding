@@ -41,24 +41,25 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
   Map<String, String> selectedCase = {};
   Map<String, String> selectedCaseFan = {};
   Map<String, String> selectedCooler = {};
+  Map<String, String> selectedOthers = {};
 
   bool isLoading = false;
   Map<String, TextEditingController> searchControllers = {};
   Map<String, bool> isDropdownOpen = {};
   Map<String, List<Map<String, String>>> filteredResults = {};
   Map<String, int> quantities = {};
+  bool isRefreshing = false;
 
   @override
   void initState() {
     super.initState();
     
-    ['CPU', 'Motherboard', 'RAM', 'GPU', 'ROM', 'PSU', 'Case', 'Case Fan', 'CPU Cooler']
-        .forEach((category) {
+    for (var category in ['CPU', 'Motherboard', 'RAM', 'GPU', 'ROM', 'PSU', 'Case', 'Case Fan', 'CPU Cooler', 'Others']) {
       searchControllers[category] = TextEditingController();
       isDropdownOpen[category] = false;
       filteredResults[category] = [];
       quantities[category] = 1;
-    });
+    }
 
     _loadPcParts();
   }
@@ -77,21 +78,64 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
         isLoading = false;
       });
     } catch (e) {
-      print('Error loading PC parts: $e');
+      ('Error loading PC parts: $e');
       setState(() {
         isLoading = false;
       });
     }
   }
 
+  Future<void> _refreshPcParts() async {
+    setState(() {
+      isRefreshing = true;
+    });
+
+    try {
+      final result = await ApiService.refreshPcParts();
+      
+      if (result['status'] == 'success') {
+        // After successful refresh, reload the parts
+        await _loadPcParts();
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Successfully refreshed PC parts data'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        throw Exception(result['message'] ?? 'Unknown error occurred');
+      }
+    } catch (e) {
+      print('Error in _refreshPcParts: $e'); // Debug logging
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error refreshing data: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    } finally {
+      setState(() {
+        isRefreshing = false;
+      });
+    }
+  }
+
   List<Map<String, String>> filterParts(String category, String searchQuery) {
-    final query = searchQuery.toLowerCase();
+    if (searchQuery.isEmpty) {
+      return pcParts.where((part) {
+        final partCategory = part['category']?.toLowerCase() ?? '';
+        return partCategory == category.toLowerCase();
+      }).toList();
+    }
+    
     return pcParts.where((part) {
       final partCategory = part['category']?.toLowerCase() ?? '';
       final partName = (part['product_name'] ?? '').toLowerCase();
       
       return partCategory == category.toLowerCase() && 
-             (query.isEmpty || partName.contains(query));
+             partName.contains(searchQuery.toLowerCase());
     }).toList();
   }
 
@@ -154,11 +198,36 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
                         filteredResults[category] = filterParts(category, searchControllers[category]!.text);
                       });
                     },
-                    onChanged: (query) {
+                    onChanged: (query) async {
                       setState(() {
                         isDropdownOpen[category] = true;
-                        filteredResults[category] = filterParts(category, query);
                       });
+                      
+                      if (query.length >= 2) { // Only search if query is at least 2 characters
+                        try {
+                          final results = await ApiService.fetchPcParts(
+                            category: category,
+                            searchQuery: query,
+                          );
+                          
+                          setState(() {
+                            filteredResults[category] = results.map((part) => 
+                              part.map((key, value) => MapEntry(key, value.toString()))
+                            ).toList();
+                          });
+                        } catch (e) {
+                          ('Error searching parts: $e');
+                          // Fallback to local filtering if API call fails
+                          setState(() {
+                            filteredResults[category] = filterParts(category, query);
+                          });
+                        }
+                      } else {
+                        // Use local filtering for short queries
+                        setState(() {
+                          filteredResults[category] = filterParts(category, query);
+                        });
+                      }
                     },
                   ),
                 ),
@@ -197,7 +266,7 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
                         final part = filteredResults[category]![index];
                         return ListTile(
                           title: Text(part['product_name'] ?? ''),
-                          subtitle: Text('\$${part['price'] ?? ''}'),
+                          subtitle: Text('RM${part['price'] ?? ''}'),
                           onTap: () {
                             setState(() {
                               onSelected(part);
@@ -315,9 +384,21 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
                           ],
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.settings),
-                        onPressed: () {},
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              Icons.refresh,
+                              color: isRefreshing ? Colors.grey : Colors.blue,
+                            ),
+                            onPressed: isRefreshing ? null : _refreshPcParts,
+                            tooltip: 'Refresh PC Parts Data',
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.settings),
+                            onPressed: () {},
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -337,6 +418,7 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
                         buildSelector('Case', 'Case', selectedCase, (value) => selectedCase = value),
                         buildSelector('Case Fan', 'Case Fan', selectedCaseFan, (value) => selectedCaseFan = value),
                         buildSelector('CPU Cooler', 'CPU Cooler', selectedCooler, (value) => selectedCooler = value),
+                        buildSelector('Others', 'Others', selectedOthers, (value) => selectedOthers = value),
                       ],
                     ),
                   ),
@@ -345,16 +427,16 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
             ),
           ),
 
-          if (isLoading)
-            const Center(
+          if (isLoading || isRefreshing)
+            Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
                   Text(
-                    'Loading...',
-                    style: TextStyle(
+                    isRefreshing ? 'Refreshing... it takes serveral minutes' : 'Loading...',
+                    style: const TextStyle(
                       fontSize: 16.0,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
@@ -376,4 +458,5 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
     super.dispose();
   }
 }
+
 
