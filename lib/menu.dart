@@ -68,7 +68,7 @@ class _MyHomePageState extends State<MyMenuPage> {
     return Scaffold(
       body: Container(
         padding: const EdgeInsets.all(10.10), // Adjust padding as needed
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
               Color(0xFF08FFA2),
@@ -118,7 +118,7 @@ class _MyHomePageState extends State<MyMenuPage> {
                   ),
                   // Optionally add an action icon
                   IconButton(
-                    icon: Icon(Icons.settings), // Replace with your desired icon
+                    icon: const Icon(Icons.settings), // Replace with your desired icon
                     onPressed: () {
                       // Add action here
                     },
@@ -152,7 +152,7 @@ class _MyHomePageState extends State<MyMenuPage> {
                         // Buttons
                         Container(
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
+                            gradient: const LinearGradient(
                               colors: [
                                 Color(0xFF08FFA2),
                                 Color(0xFF08BAFF), // End color for gradient
@@ -196,7 +196,7 @@ class _MyHomePageState extends State<MyMenuPage> {
                         // Additional buttons...
                         Container(
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
+                            gradient: const LinearGradient(
                               colors: [
                                 Color(0xFF08FFA2),
                                 Color(0xFF08BAFF), // End color for gradient
@@ -233,7 +233,7 @@ class _MyHomePageState extends State<MyMenuPage> {
                         // More buttons...
                         Container(
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
+                            gradient: const LinearGradient(
                               colors: [
                                 Color(0xFF08FFA2),
                                 Color(0xFF08BAFF), // End color for gradient
@@ -270,7 +270,7 @@ class _MyHomePageState extends State<MyMenuPage> {
                         // Another button...
                         Container(
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
+                            gradient: const LinearGradient(
                               colors: [
                                 Color(0xFF08FFA2),
                                 Color(0xFF08BAFF), // End color for gradient

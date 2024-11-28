@@ -308,7 +308,7 @@ class _MyHomePageState extends State<MyTutorialPage> with SingleTickerProviderSt
                                                        ),
                                                        child: Ink(
                                                          decoration: BoxDecoration(
-                                                           gradient: LinearGradient(
+                                                           gradient: const LinearGradient(
                                                              colors: [
                                                                Color(0xFF08FFA2), // Start color for gradient
                                                                Color(0xFF08BAFF), // End color for gradient

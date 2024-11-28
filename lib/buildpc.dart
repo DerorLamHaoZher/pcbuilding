@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'services/api_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -44,68 +43,64 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
   Map<String, String> selectedCooler = {};
 
   bool isLoading = false;
-  Map<String, String> searchQueries = {
-    'CPU': '',
-    'Motherboard': '',
-    'RAM': '',
-    'GPU': '',
-    'ROM': '',
-    'PSU': '',
-    'Case': '',
-    'Case Fan': '',
-    'CPU Cooler': '',
-  };
+  Map<String, TextEditingController> searchControllers = {};
+  Map<String, bool> isDropdownOpen = {};
+  Map<String, List<Map<String, String>>> filteredResults = {};
+  Map<String, int> quantities = {};
 
-  TextEditingController searchController = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    
+    ['CPU', 'Motherboard', 'RAM', 'GPU', 'ROM', 'PSU', 'Case', 'Case Fan', 'CPU Cooler']
+        .forEach((category) {
+      searchControllers[category] = TextEditingController();
+      isDropdownOpen[category] = false;
+      filteredResults[category] = [];
+      quantities[category] = 1;
+    });
 
-  // Fetch PC parts from the scraper API
-  Future<void> fetchPCParts() async {
+    _loadPcParts();
+  }
+
+  Future<void> _loadPcParts() async {
     setState(() {
       isLoading = true;
     });
-    try {
-      final response = await http.get(Uri.parse('http://192.168.0.196:5000/scrape'));
 
-      if (response.statusCode == 200) {
-        List<dynamic> data = json.decode(response.body);
-        setState(() {
-          pcParts = data.map((part) {
-            return {
-              'name': part['product_name']?.toString() ?? 'Unknown Product',
-              'price': part['price']?.toString() ?? 'Price not available',
-              'description': 'Sample description for ${part['product_name'] ?? "this product"}',
-              'image': part['image']?.toString() ?? 'assets/sample_image.png',
-              'category': part['category']?.toString() ?? 'Unknown',
-            };
-          }).toList();
-        });
-      } else {
-        throw Exception('Failed to load PC parts');
-      }
+    try {
+      final parts = await ApiService.fetchPcParts();
+      setState(() {
+        pcParts = parts.map((part) => part.map(
+          (key, value) => MapEntry(key, value.toString()),
+        )).toList();
+        isLoading = false;
+      });
     } catch (e) {
-      print('Error fetching PC parts: $e');
-    } finally {
+      print('Error loading PC parts: $e');
       setState(() {
         isLoading = false;
       });
     }
   }
 
-  // Filter parts by category and search query
   List<Map<String, String>> filterParts(String category, String searchQuery) {
+    final query = searchQuery.toLowerCase();
     return pcParts.where((part) {
-      return (part['category']?.toLowerCase() == category.toLowerCase()) &&
-          (part['name']?.toLowerCase().contains(searchQuery.toLowerCase()) ?? false);
+      final partCategory = part['category']?.toLowerCase() ?? '';
+      final partName = (part['product_name'] ?? '').toLowerCase();
+      
+      return partCategory == category.toLowerCase() && 
+             (query.isEmpty || partName.contains(query));
     }).toList();
   }
 
-  // Searchable Dropdown Widget with Quantity Selector
   Widget buildSelector(
-      String label,
-      String category,
-      Map<String, String> selectedPart,
-      Function(Map<String, String>) onSelected,
-      ) {
+    String label,
+    String category,
+    Map<String, String> selectedPart,
+    Function(Map<String, String>) onSelected,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       margin: const EdgeInsets.symmetric(vertical: 10.0),
@@ -123,7 +118,6 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Category Label
           Text(
             label,
             style: const TextStyle(
@@ -134,46 +128,100 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
           ),
           const SizedBox(height: 10.0),
 
-          // Searchable Dropdown
-          TextField(
-            controller: searchController,
-            decoration: InputDecoration(
-              labelText: 'Search $label',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.search),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(4.0),
             ),
-            onChanged: (query) {
-              setState(() {
-                searchQueries[category] = query;
-              });
-            },
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: searchControllers[category],
+                    decoration: InputDecoration(
+                      hintText: 'Search $label',
+                      hintStyle: const TextStyle(
+                        fontSize: 14.0,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      border: InputBorder.none,
+                      prefixIcon: const Icon(Icons.search),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
+                    ),
+                    onTap: () {
+                      setState(() {
+                        isDropdownOpen[category] = true;
+                        filteredResults[category] = filterParts(category, searchControllers[category]!.text);
+                      });
+                    },
+                    onChanged: (query) {
+                      setState(() {
+                        isDropdownOpen[category] = true;
+                        filteredResults[category] = filterParts(category, query);
+                      });
+                    },
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(isDropdownOpen[category]! ? Icons.arrow_drop_up : Icons.arrow_drop_down),
+                  onPressed: () {
+                    setState(() {
+                      isDropdownOpen[category] = !isDropdownOpen[category]!;
+                      if (isDropdownOpen[category]!) {
+                        filteredResults[category] = filterParts(category, searchControllers[category]!.text);
+                      }
+                    });
+                  },
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 10.0),
 
-          // Dropdown List (filtered)
-          DropdownButton<String>(
-            isExpanded: true,
-            hint: Text('Select $label'),
-            value: selectedPart.isEmpty ? null : selectedPart['name'],
-            onChanged: (String? newValue) {
-              if (newValue != null) {
-                setState(() {
-                  selectedPart['name'] = newValue;
-                  selectedPart['category'] = category;
-                  // Update other part details as needed (price, description, etc.)
-                });
-              }
-            },
-            items: filterParts(category, searchQueries[category]!).map<DropdownMenuItem<String>>((part) {
-              return DropdownMenuItem<String>(
-                value: part['name'],
-                child: Text(part['name']!),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 10.0),
+          if (isDropdownOpen[category]!)
+            Container(
+              constraints: const BoxConstraints(maxHeight: 200),
+              margin: const EdgeInsets.only(top: 4.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(4.0),
+              ),
+              child: filteredResults[category]!.isEmpty
+                  ? const ListTile(
+                      title: Text('No items found'),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: filteredResults[category]!.length,
+                      itemBuilder: (context, index) {
+                        final part = filteredResults[category]![index];
+                        return ListTile(
+                          title: Text(part['product_name'] ?? ''),
+                          subtitle: Text('\$${part['price'] ?? ''}'),
+                          onTap: () {
+                            setState(() {
+                              onSelected(part);
+                              searchControllers[category]!.text = part['product_name'] ?? '';
+                              isDropdownOpen[category] = false;
+                            });
+                          },
+                        );
+                      },
+                    ),
+            ),
 
-          // Quantity Selector
+          if (selectedPart.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                'Selected: ${selectedPart['name']} - ${selectedPart['price']}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
+                ),
+              ),
+            ),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -189,19 +237,21 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
                 icon: const Icon(Icons.remove),
                 onPressed: () {
                   setState(() {
-                    // Update quantity logic here
+                    if (quantities[category]! > 1) {
+                      quantities[category] = quantities[category]! - 1;
+                    }
                   });
                 },
               ),
               Text(
-                '1', // This can be dynamic based on selected quantity
+                '${quantities[category]}',
                 style: const TextStyle(fontSize: 16.0),
               ),
               IconButton(
                 icon: const Icon(Icons.add),
                 onPressed: () {
                   setState(() {
-                    // Update quantity logic here
+                    quantities[category] = quantities[category]! + 1;
                   });
                 },
               ),
@@ -210,12 +260,6 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
         ],
       ),
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    fetchPCParts(); // Fetch the data when the page loads
   }
 
   @override
@@ -239,7 +283,6 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 60.0),
-                // Custom AppBar
                 Container(
                   padding: const EdgeInsets.all(16.0),
                   decoration: BoxDecoration(
@@ -281,7 +324,6 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
                 ),
                 const SizedBox(height: 30.0),
 
-                // PC Part Selectors
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -303,7 +345,6 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
             ),
           ),
 
-          // Loading screen
           if (isLoading)
             const Center(
               child: Column(
@@ -312,7 +353,7 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
                   Text(
-                    'Fetching data...',
+                    'Loading...',
                     style: TextStyle(
                       fontSize: 16.0,
                       fontWeight: FontWeight.bold,
@@ -326,4 +367,13 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    for (var controller in searchControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
 }
+

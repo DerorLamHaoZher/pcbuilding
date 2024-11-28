@@ -78,16 +78,19 @@ class _MyHomePageState extends State<MyHomePage> {
         email: emailController.text,
         password: passwordController.text,
       );
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Logged in successfully!')),
+        const SnackBar(content: Text('Logged in successfully!')),
       );
       Navigator.pushReplacement(
+        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(
           builder: (context) => const MyMenuPage(title: 'Menu',),
         ),
       );
     } catch (e) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
@@ -148,7 +151,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 const SizedBox(height: 50),
                 TextField(
                   controller: emailController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Email',
                     labelStyle: TextStyle(
                       fontSize: 20.0,
@@ -164,9 +167,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                     border: OutlineInputBorder(),
                   ),
-                  style: TextStyle(
+                  style: const TextStyle(
                   fontSize: 22.0,
-                  fontFamily: 'bombardment',
+                  fontFamily: 'nasalization',
                   color: Color(0xFF000000),
                   shadows: [
                     Shadow(
@@ -205,9 +208,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       },
                     ),
                   ),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 22.0,
-                    fontFamily: 'bombardment',
+                    fontFamily: 'nasalization',
                     color: Color(0xFF000000),
                     shadows: [
                       Shadow(
@@ -246,7 +249,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       padding: const EdgeInsets.symmetric(
                           vertical: 20.0, horizontal: 30.0),
                       textStyle: const TextStyle(
-                        fontFamily: 'bombardment',
+                        fontFamily: 'nasalization',
                         fontSize: 25.0,
                       ),
                     ),
