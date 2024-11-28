@@ -119,240 +119,279 @@ class _MyHomePageState extends State<MyTutorialPage> with SingleTickerProviderSt
     });
   }
 
-  void _navigateToNewPage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const MyBuildPCPage(title: 'Build PC',)), // Navigate to NewPage
-    );
+  // Add responsive helper methods
+  double _responsivePadding(BuildContext context) {
+    return MediaQuery.of(context).size.width * 0.03;
+  }
+
+  double _responsiveFontSize(BuildContext context, double baseSize) {
+    return baseSize * MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.2);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        padding: const EdgeInsets.all(10.0),
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFF08FFA2),
-              Color(0xFF08BAFF),
-            ],
+            colors: [Color(0xFF08FFA2), Color(0xFF08BAFF)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.all(_responsivePadding(context)),
+            child: Column(
+              children: [
+                // Header
+                _buildHeader(),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                
+                // Main Content
+                Expanded(
+                  child: _buildMainContent(),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: _responsivePadding(context) * 2,
+        vertical: _responsivePadding(context),
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.95),
+        borderRadius: BorderRadius.circular(30.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'PC BMA',
+            style: TextStyle(
+              color: const Color(0xFF010B73),
+              fontSize: _responsiveFontSize(context, 32.0),
+              fontFamily: 'bombardment',
+              shadows: const [
+                Shadow(
+                  blurRadius: 3.0,
+                  color: Colors.black38,
+                  offset: Offset(1.5, 1.5),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.settings, color: Color(0xFF010B73)),
+              onPressed: () {},
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMainContent() {
+    return Container(
+      padding: EdgeInsets.all(_responsivePadding(context)),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.95),
+        borderRadius: BorderRadius.circular(30.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: const Offset(3, 3),
+          ),
+        ],
+      ),
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
-            const SizedBox(height: 60.0),
-            Container(
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
-                    spreadRadius: 0.5,
-                    blurRadius: 5,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // Image and Indicator Section
+            AspectRatio(
+              aspectRatio: 1, // Maintain square aspect ratio
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  const Text(
-                    'PC BMA',
-                    style: TextStyle(
-                      color: Color(0xFF010B73),
-                      fontSize: 30.0,
-                      fontFamily: 'bombardment',
-                      shadows: [
-                        Shadow(
-                          blurRadius: 2.0,
-                          color: Colors.black,
-                          offset: Offset(1.0, 1.0),
-                        ),
-                      ],
-                    ),
+                  Image.asset(
+                    pcParts[currentIndex]['image']!,
+                    height: 440.0,
+                    fit: BoxFit.contain,
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.settings),
-                    onPressed: () {},
+                  Positioned(
+                    left: pcParts[currentIndex]['position']!.dx,
+                    top: pcParts[currentIndex]['position']!.dy,
+                    child: ScaleTransition(
+                      scale: Tween<double>(begin: 1.0, end: 1.5).animate(
+                        CurvedAnimation(
+                          parent: _animationController,
+                          curve: Curves.easeInOut,
+                        ),
+                      ),
+                      child: Container(
+                        width: 40.0,
+                        height: 40.0,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.blue.withOpacity(0.5),
+                        ),
+                        child: Center(
+                          child: Text(
+                            pcParts[currentIndex]['name']!,
+                            style: TextStyle(
+                              color: Colors.yellow,
+                              fontWeight: FontWeight.bold,
+                              fontSize: _responsiveFontSize(context, 10.0),
+                              fontFamily: 'nasalization',
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 30.0),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Container(
-                  padding: const EdgeInsets.all(20.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30.0),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.5),
-                        spreadRadius: 0.5,
-                        blurRadius: 5,
-                        offset: const Offset(3, 3),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Image.asset(
-                            pcParts[currentIndex]['image']!,
-                            height: 440.0,
-                            fit: BoxFit.contain,
-                          ),
-                          Positioned(
-                            left: pcParts[currentIndex]['position']!.dx,
-                            top: pcParts[currentIndex]['position']!.dy,
-                            child: ScaleTransition(
-                              scale: Tween<double>(begin: 1.0, end: 1.5).animate(
-                                CurvedAnimation(
-                                  parent: _animationController,
-                                  curve: Curves.easeInOut,
-                                ),
-                              ),
-                              child: Container(
-                                width: 40.0,
-                                height: 40.0,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.blue.withOpacity(0.5),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    pcParts[currentIndex]['name']!,
-                                    style: const TextStyle(
-                                      color: Colors.yellow,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 10.0,
-                                      fontFamily: 'nasalization',
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20.0),
-                      SizedBox(
-                        height: 100.0,
-                        child: SingleChildScrollView(
-                          child: Text(
-                            pcParts[currentIndex]['description']!,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 16.0,
-                              fontFamily: 'nasalization',
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10.0),
-                      Text(
-                        '${currentIndex + 1} of ${pcParts.length}',
-                        style: const TextStyle(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                          fontFamily: 'nasalization',
-                        ),
-                      ),
-                      const SizedBox(height: 30.0),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center, // Center the left and right buttons
-                        children: [
-                          // Left Arrow Button
-                          ElevatedButton(
-                            onPressed: _navigateLeft,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.black,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20.0),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                            ),
-                            child: const Icon(
-                              Icons.arrow_left,
-                              color: Colors.white,
-                              size: 30.0,
-                            ),
-                          ),
-                          const SizedBox(width: 20.0),
-                                                     TextButton(
-                                                     onPressed: () {
-                                                       Navigator.push(
-                                                           context,
-                                                           MaterialPageRoute(
-                                                             builder: (context) => const MyBuildPCPage(title: 'Build PC page'),
-                                                           ),
-                                                         );
-                                                       },
-                                                       style: TextButton.styleFrom(
-                                                         padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                                                         foregroundColor: Colors.black, // Text color
-                                                         textStyle: const TextStyle(
-                                                           fontFamily: 'nasalization',
-                                                           fontSize: 25.0, // Adjust font size
-                                                         ),
-                                                       ),
-                                                       child: Ink(
-                                                         decoration: BoxDecoration(
-                                                           gradient: const LinearGradient(
-                                                             colors: [
-                                                               Color(0xFF08FFA2), // Start color for gradient
-                                                               Color(0xFF08BAFF), // End color for gradient
-                                                             ],
-                                                             begin: Alignment.topLeft,
-                                                             end: Alignment.bottomRight,
-                                                           ),
-                                                           borderRadius: BorderRadius.circular(20.0), // Rounded corners
-                                                         ),
-                                                         child: Container(
-                                                           padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                                                           child: const Text(
-                                                             'Skip',
-                                                             style: TextStyle(
-                                                               fontFamily: 'nasalization',
-                                                               fontSize: 25.0,
-                                                             ),
-                                                           ),
-                                                         ),
-                                                       ),
-                                                     ),
-                          const SizedBox(width: 20.0),
-                          ElevatedButton(
-                            onPressed: _navigateRight,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.black,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20.0),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                            ),
-                            child: const Icon(
-                              Icons.arrow_right,
-                              color: Colors.white,
-                              size: 30.0,
-                            ),
-                          ),
-                        ],
-                      ),
 
-                    ],
-                  ),
+            SizedBox(height: _responsivePadding(context)),
+
+            // Description Section
+            Container(
+              padding: EdgeInsets.all(_responsivePadding(context)),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.blue.withOpacity(0.1)),
+              ),
+              child: Text(
+                pcParts[currentIndex]['description']!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: _responsiveFontSize(context, 16.0),
+                  fontFamily: 'nasalization',
+                  height: 1.5,
+                  color: const Color(0xFF2C3E50),
                 ),
               ),
+            ),
+
+            SizedBox(height: _responsivePadding(context)),
+
+            // Page Indicator
+            Text(
+              '${currentIndex + 1} of ${pcParts.length}',
+              style: TextStyle(
+                fontSize: _responsiveFontSize(context, 14.0),
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+                fontFamily: 'nasalization',
+              ),
+            ),
+
+            SizedBox(height: _responsivePadding(context)),
+
+            // Navigation Controls
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Left Arrow Button
+                ElevatedButton(
+                  onPressed: _navigateLeft,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_left,
+                    color: Colors.white,
+                    size: 30.0,
+                  ),
+                ),
+                const SizedBox(width: 20.0),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MyBuildPCPage(title: 'Build PC page'),
+                      ),
+                    );
+                  },
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                    foregroundColor: Colors.black, // Text color
+                    textStyle: const TextStyle(
+                      fontFamily: 'nasalization',
+                      fontSize: 25.0, // Adjust font size
+                    ),
+                  ),
+                  child: Ink(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF08FFA2), // Start color for gradient
+                          Color(0xFF08BAFF), // End color for gradient
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20.0), // Rounded corners
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                      child: const Text(
+                        'Skip',
+                        style: TextStyle(
+                          fontFamily: 'nasalization',
+                          fontSize: 25.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20.0),
+                ElevatedButton(
+                  onPressed: _navigateRight,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_right,
+                    color: Colors.white,
+                    size: 30.0,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

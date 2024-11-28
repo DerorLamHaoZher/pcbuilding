@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'tutorial.dart';
+import 'viewpart.dart';
 
 void main() {
   runApp(const MyApp());
@@ -252,7 +253,14 @@ class _MyHomePageState extends State<MyMenuPage> {
                             ],
                           ),
                           child: TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const ViewParts(),
+                                ),
+                              );
+                            },
                             style: TextButton.styleFrom(
                               foregroundColor: Colors.black, // Text color
                               padding: const EdgeInsets.symmetric(
