@@ -128,6 +128,7 @@ class _MyHomePageState extends State<MyTutorialPage> with SingleTickerProviderSt
     return baseSize * MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.2);
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -147,7 +148,7 @@ class _MyHomePageState extends State<MyTutorialPage> with SingleTickerProviderSt
                 // Header
                 _buildHeader(),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-                
+
                 // Main Content
                 Expanded(
                   child: _buildMainContent(),
