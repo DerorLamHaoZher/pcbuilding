@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'tutorial.dart';
 import 'viewpart.dart';
+import 'recommend.dart';
+import 'package:pc_bma/services/auth_service.dart';
+import 'viewsavedpc.dart';
+import 'main.dart';
 
 void main() {
   runApp(const MyApp());
@@ -53,10 +57,25 @@ class MyMenuPage extends StatefulWidget {
   final String title;
 
   @override
-  State<MyMenuPage> createState() => _MyHomePageState();
+  State<MyMenuPage> createState() => _MyMenuPageState();
 }
 
-class _MyHomePageState extends State<MyMenuPage> {
+class _MyMenuPageState extends State<MyMenuPage> {
+  final AuthService _authService = AuthService();
+
+  void _logout() async {
+    try {
+      await _authService.logout();
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const MyHomePage(title: 'logout')),
+        (Route<dynamic> route) => false,
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Logout failed: ${e.toString()}')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,9 +138,32 @@ class _MyHomePageState extends State<MyMenuPage> {
                   ),
                   // Optionally add an action icon
                   IconButton(
-                    icon: const Icon(Icons.settings), // Replace with your desired icon
+                    icon: const Icon(Icons.logout), // Replace with your desired icon
                     onPressed: () {
-                      // Add action here
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text('Logout'),
+                            content: const Text('Are you sure you want to logout?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  _logout();
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text('Logout'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
                     },
                   ),
                 ],
@@ -216,7 +258,14 @@ class _MyHomePageState extends State<MyMenuPage> {
                             ],
                           ),
                           child: TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                    const ViewSavedPCPage()),
+                              );
+                            },
                             style: TextButton.styleFrom(
                               foregroundColor: Colors.black, // Text color
                               padding: const EdgeInsets.symmetric(
@@ -297,7 +346,14 @@ class _MyHomePageState extends State<MyMenuPage> {
                             ],
                           ),
                           child: TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const RecommendPage(),
+                                ),
+                              );
+                            },
                             style: TextButton.styleFrom(
                               foregroundColor: Colors.black, // Text color
                               padding: const EdgeInsets.symmetric(

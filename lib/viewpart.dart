@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'services/api_service.dart';
+import 'productdetail.dart';
 
 class ViewParts extends StatefulWidget {
-  const ViewParts({Key? key}) : super(key: key);
+  const ViewParts({super.key});
 
   @override
   State<ViewParts> createState() => _ViewPartsState();
@@ -400,7 +401,7 @@ class _ViewPartsState extends State<ViewParts> {
                                     ),
                                   ),
                                   onTap: () {
-                                    // Your existing onTap functionality
+                                    _navigateToProductDetail(part);
                                   },
                                 ),
                               );
@@ -440,5 +441,14 @@ class _ViewPartsState extends State<ViewParts> {
       default:
         return Icons.devices_other;
     }
+  }
+
+  void _navigateToProductDetail(Map<String, dynamic> part) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProductDetailPage(product: part),
+      ),
+    );
   }
 }
