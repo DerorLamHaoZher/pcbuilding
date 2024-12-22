@@ -24,8 +24,7 @@ CREATE TABLE IF NOT EXISTS products (
     product_name TEXT,
     price TEXT,
     category TEXT,
-    scraped_at TEXT,
-    image_url TEXT
+    scraped_at TEXT
 )
 ''')
 
@@ -89,16 +88,11 @@ def scrape_category(driver, base_url, category, product_data):
                 price_element = item.find_element(By.CSS_SELECTOR, '.oe_currency_value')
                 price = price_element.text.strip() if price_element else "Price not available"
                 
-                # Scrape the product image URL
-                image_element = item.find_element(By.CSS_SELECTOR, 'img')  # Adjust the selector as needed
-                image_url = image_element.get_attribute('src') if image_element else "Image not available"
-
                 product_data.append({
                     'product_name': product_name,
                     'price': price,
                     'category': category,
-                    'scraped_at': datetime.now().isoformat(),
-                    'image_url': image_url  # Add the image URL to the product data
+                    'scraped_at': datetime.now().isoformat()
                 })
             except Exception as e:
                 print(f"Error extracting data for item: {e}")
@@ -108,8 +102,8 @@ def scrape_category(driver, base_url, category, product_data):
 # Replace MongoDB insertions with SQLite insertions
 def save_to_db(product_data):
     cursor.executemany('''
-    INSERT INTO products (product_name, price, category, scraped_at, image_url) VALUES (?, ?, ?, ?, ?)
-    ''', [(p['product_name'], p['price'], p['category'], p['scraped_at'], p['image_url']) for p in product_data])
+    INSERT INTO products (product_name, price, category, scraped_at) VALUES (?, ?, ?, ?)
+    ''', [(p['product_name'], p['price'], p['category'], p['scraped_at']) for p in product_data])
     conn.commit()
 
 @app.route('/')
@@ -167,8 +161,7 @@ def scrape():
                 product_name TEXT,
                 price TEXT,
                 category TEXT,
-                scraped_at TEXT,
-                image_url TEXT
+                scraped_at TEXT
             )
             ''')
         

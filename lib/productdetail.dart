@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class ProductDetailPage extends StatelessWidget {
   final Map<String, dynamic> product;
 
-  const ProductDetailPage({Key? key, required this.product}) : super(key: key);
+  const ProductDetailPage({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +88,7 @@ class ProductDetailPage extends StatelessWidget {
                       // Brand Image
                       Center(
                         child: CircleAvatar(
-                          radius: 50,
+                          radius: 100,
                           backgroundImage: NetworkImage(
                             product['image_url'] ?? 'https://via.placeholder.com/100',
                           ),
@@ -102,6 +102,7 @@ class ProductDetailPage extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
+                          fontFamily: 'Nasalization',
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -111,17 +112,19 @@ class ProductDetailPage extends StatelessWidget {
                         'Price: RM${product['price'] ?? 'N/A'}',
                         style: const TextStyle(
                           fontSize: 20,
-                          color: Colors.green,
+                          color: Colors.blue,
+                          fontFamily: 'Nasalization',
                         ),
                       ),
                       const SizedBox(height: 20),
                       
                       // Description
-                      Text(
+                      const Text(
                         'Description:',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          fontFamily: 'Nasalization',
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -129,6 +132,7 @@ class ProductDetailPage extends StatelessWidget {
                         product['description'] ?? 'No description available.',
                         style: const TextStyle(
                           fontSize: 16,
+                          fontFamily: 'Nasalization',
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -148,6 +152,7 @@ class ProductDetailPage extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
+                                fontFamily: 'Nasalization',
                               ),
                             ),
                             const SizedBox(height: 10),
@@ -155,6 +160,7 @@ class ProductDetailPage extends StatelessWidget {
                               'Category: ${product['category'] ?? 'N/A'}',
                               style: const TextStyle(
                                 fontSize: 16,
+                                fontFamily: 'Nasalization',
                               ),
                             ),
                             // Add more specifications as needed

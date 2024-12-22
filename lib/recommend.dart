@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'services/api_service.dart'; // Import your API service
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:math'; // Import the math library
+import 'package:intl/intl.dart'; // Import for date formatting
+
 
 class RecommendPage extends StatefulWidget {
   const RecommendPage({super.key});
@@ -228,7 +231,7 @@ class _RecommendPageState extends State<RecommendPage> {
 
   Future<void> _saveBuild() async {
     // Check if any parts are selected
-    if (_recommendedParts.isEmpty) { // Assuming _recommendedParts holds the selected parts
+    if (_recommendedParts.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please select at least one part before saving.')),
@@ -280,12 +283,21 @@ class _RecommendPageState extends State<RecommendPage> {
       }
     });
 
+    // Get the current timestamp as a formatted string
+    String createdAtString = DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now());
+
     try {
-      await userDoc.set({
-        'savedBuilds': FieldValue.arrayUnion([
-          {'name': buildName, 'parts': selectedParts}
-        ])
-      }, SetOptions(merge: true));
+      // Create the build object with the formatted timestamp
+      Map<String, dynamic> buildData = {
+        'name': buildName,
+        'parts': selectedParts,
+        'createdAt': createdAtString, // Store the formatted timestamp as a string
+      };
+
+      // Use update to add the build to the savedBuilds array
+      await userDoc.update({
+        'savedBuilds': FieldValue.arrayUnion([buildData]) // Add the build object to the array
+      });
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -385,11 +397,11 @@ class _RecommendPageState extends State<RecommendPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
+          Text(
             'Recommended Build',
             style: TextStyle(
               color: Color(0xFF010B73),
-              fontSize: 30.0,
+              fontSize: min(MediaQuery.of(context).size.width * 0.08, 25), // Responsive font size with max 25
               fontFamily: 'bombardment',
               shadows: [
                 Shadow(
@@ -434,7 +446,12 @@ class _RecommendPageState extends State<RecommendPage> {
               items: [lowSpec, midSpec, highSpec]
                   .map((spec) => DropdownMenuItem(
                         value: spec,
-                        child: Text(spec),
+                        child: Text(
+                          spec,
+                          style: TextStyle(
+                            fontSize: min(MediaQuery.of(context).size.width * 0.04,15), // Responsive font size
+                          ),
+                        ),
                       ))
                   .toList(),
               onChanged: (value) {
@@ -444,35 +461,77 @@ class _RecommendPageState extends State<RecommendPage> {
               },
             ),
           ),
-          const SizedBox(width: 20), // Spacing between dropdown and switch
-          // Platform Toggle Switch with Images
+          const SizedBox(width: 10), // Add some space between the dropdown and the selectors
+          // Platform Toggle Button with Images
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // AMD Logo
-              Image.asset(
-                'lib/assets/images/AMD-logo.png', // Path to AMD logo
-                width: 60, // Adjust width as needed
-                height: 60, // Adjust height as needed
-              ),
-              const SizedBox(width: 10), // Spacing between image and switch
-              Switch(
-                value: _isIntel,
-                onChanged: (value) {
+              GestureDetector(
+                onTap: () {
                   setState(() {
-                    _isIntel = value;
-                    _isAMD = !value; // Ensure only one is selected
+                    _isIntel = true;
+                    _isAMD = false;
                   });
                 },
-                activeColor: Colors.blue, // Color when Intel is selected
-                inactiveThumbColor: Colors.red, // Color when AMD is selected
-                inactiveTrackColor: Colors.red.withOpacity(0.5), // Track color when AMD is selected
+                child: Container(
+                  padding: EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: _isIntel ? Colors.blue : Colors.grey,
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(30.0),
+                    color: _isIntel ? Colors.blue.withOpacity(0.2) : Colors.transparent,
+                  ),
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'lib/assets/images/intel-logo.png', // Path to Intel logo
+                        width: 35, // Adjust size as needed
+                        height: 40,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Intel',
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(width: 10), // Spacing between switch and image
-              // Intel Logo
-              Image.asset(
-                'lib/assets/images/intel-logo.png', // Path to Intel logo
-                width: 60, // Adjust width as needed
-                height: 60, // Adjust height as needed
+              const SizedBox(width: 20), // Spacing between buttons
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isIntel = false;
+                    _isAMD = true;
+                  });
+                },
+                child: Container(
+                  padding: EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: _isAMD ? Colors.red : Colors.grey,
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(30.0),
+                    color: _isAMD ? Colors.red.withOpacity(0.2) : Colors.transparent,
+                  ),
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'lib/assets/images/AMD-logo.png', // Path to AMD logo
+                        width: 35, // Adjust size as needed
+                        height: 40,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'AMD',
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -509,14 +568,21 @@ class _RecommendPageState extends State<RecommendPage> {
           child: TextButton(
             onPressed: _generateBuild,
             style: TextButton.styleFrom(
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 30.0),
-              textStyle: const TextStyle(
+              padding: EdgeInsets.symmetric(
+                vertical: MediaQuery.of(context).size.height * 0.02, // Responsive vertical padding
+                horizontal: MediaQuery.of(context).size.width * 0.05, // Responsive horizontal padding
+              ),
+              textStyle: TextStyle(
+                fontSize: min(MediaQuery.of(context).size.width * 0.05,15),
                 fontFamily: 'nasalization',
-                fontSize: 15.0,
               ),
             ),
-            child: const Text('Generate Build'),
+            child: const Text(
+              'Generate Build',
+              style: TextStyle(
+                color: Colors.black, // Set text color to black
+              ),
+            ),
           ),
         ),
         const SizedBox(width: 30), // Space between buttons
@@ -545,7 +611,10 @@ class _RecommendPageState extends State<RecommendPage> {
             onPressed: _saveBuild, // Show dialog to enter build name
             style: TextButton.styleFrom(
               foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 30.0),
+    padding: EdgeInsets.symmetric(
+    vertical: MediaQuery.of(context).size.height * 0.02, // Responsive vertical padding
+    horizontal: MediaQuery.of(context).size.width * 0.05, // Responsive horizontal padding
+    ),
               textStyle: const TextStyle(
                 fontFamily: 'nasalization',
                 fontSize: 15.0,
@@ -571,79 +640,131 @@ class _RecommendPageState extends State<RecommendPage> {
 
   Widget _buildPartsList() {
     return Expanded(
-      child: isLoading
+      child: Container(
+        padding: const EdgeInsets.all(10.10),
+        decoration: BoxDecoration(
+          color: Colors.white, // Set white background
+          borderRadius: BorderRadius.circular(30.0), // Rounded corners
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.5), // Shadow color
+              spreadRadius: 0.5,
+              blurRadius: 5,
+              offset: const Offset(3, 3), // Shadow offset
+            ),
+          ],
+        ),
+        child: isLoading 
           ? const Center(
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF010B73)),
               ),
             )
-          : Container(
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 5,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: ListView.builder(
-                itemCount: _recommendedParts.length,
-                itemBuilder: (context, index) {
-                  final part = _recommendedParts[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 10.0), // Space between cards
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15.0), // Rounded corners
+          : ListView.builder(
+              itemCount: _recommendedParts.length,
+              itemBuilder: (context, index) {
+                final part = _recommendedParts[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 15),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF08FFA2), // Start color
+                        Color(0xFF08BAFF), // End color
+                      ],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
                     ),
-                    elevation: 5, // Shadow effect
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0), // Padding inside the card
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  part['product_name'] ?? 'Unknown',
-                                  style: const TextStyle(
-                                    fontSize: 18.0,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF010B73), // Distinct color for the title
-                                  ),
-                                ),
-                                const SizedBox(height: 5.0), // Space between title and subtitle
-                                Text(
-                                  'Price: RM${part['price'] ?? 'N/A'}',
-                                  style: const TextStyle(
-                                    fontSize: 16.0,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Optionally, you can add an icon or button here
-                          IconButton(
-                            icon: const Icon(Icons.info_outline),
-                            onPressed: () {
-                              // Handle info button press
-                            },
-                          ),
-                        ],
+                    borderRadius: BorderRadius.circular(30.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        spreadRadius: 0.5,
+                        blurRadius: 4,
+                        offset: const Offset(2, 2),
+                      ),
+                    ],
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0), // Add padding for the ListTile
+                    leading: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: Icon(
+                        _getCategoryIcon(part['category']),
+                        color: const Color(0xFF010B73),
                       ),
                     ),
-                  );
-                },
-              ),
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start, // Aligns the title to the start
+                      children: [
+                        Text(
+                          part['product_name'] ?? 'Unknown Product',
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontFamily: 'nasalization',
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10.0), // Gap between product name and category/price
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between category and price
+                          children: [
+                            Text(
+                              part['category'] ?? 'Uncategorized', // Display category
+                              style: const TextStyle(
+                                color: Colors.black87,
+                                fontFamily: 'nasalization',
+                              ),
+                            ),
+                            Text(
+                              'RM${part['price'] ?? 'N/A'}',
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontFamily: 'nasalization',
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      _navigateToProductDetail(part);
+                    },
+                  ),
+                );
+              },
             ),
+      ),
     );
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'cpu':
+        return Icons.computer;
+      case 'motherboard':
+        return Icons.memory;
+      case 'ram':
+        return Icons.memory;
+      case 'rom':
+        return Icons.storage;
+      case 'psu':
+        return Icons.power;
+      case 'gpu':
+        return Icons.videogame_asset;
+      default:
+        return Icons.device_unknown;
+    }
+  }
+
+  void _navigateToProductDetail(Map<String, dynamic> part) {
+    // Implement navigation to product detail page
   }
 }
 

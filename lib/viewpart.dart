@@ -15,11 +15,19 @@ class _ViewPartsState extends State<ViewParts> {
   String searchQuery = '';
   String? selectedCategory;
   String sortBy = 'name';
+  bool isSortByNameAscending = true;
+  bool isSortByPriceAscending = true;
+  bool isRefreshing = false;
 
   @override
   void initState() {
     super.initState();
     _loadPcParts();
+    
+    // Set default sorting
+    sortBy = 'name'; // Default sort by name
+    isSortByNameAscending = true; // A to Z
+    isSortByPriceAscending = false; // High to low
   }
 
   Future<void> _loadPcParts() async {
@@ -31,12 +39,80 @@ class _ViewPartsState extends State<ViewParts> {
       final parts = await ApiService.fetchPcParts();
       setState(() {
         pcParts = parts;
+
+        // Sort the parts initially
+        pcParts.sort((a, b) => a['product_name'].compareTo(b['product_name'])); // Sort A to Z
+        pcParts.sort((a, b) => a['price'].compareTo(b['price'])); // Sort High to Low
+
         isLoading = false;
       });
+
+      // Show a message when done scraping
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Data scraping completed successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       print('Error loading PC parts: $e');
       setState(() {
         isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _refreshPcParts() async {
+    setState(() {
+      isRefreshing = true;
+    });
+
+    // Show loading indicator and message
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing the dialog by tapping outside
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Row(
+            children: [
+              const CircularProgressIndicator(), // Loading indicator
+              const SizedBox(width: 20), // Space between the indicator and text
+              const Expanded(
+                child: Text('Refreshing... It may take several minutes.'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    try {
+      final result = await ApiService.refreshPcParts(); // Fetch live data
+
+      if (result['status'] == 'success') {
+        await _loadPcParts(); // Reload parts after successful refresh
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Successfully refreshed PC parts data'),
+            backgroundColor: Colors.green,
+          ));
+      } else {
+        throw Exception(result['message'] ?? 'Unknown error occurred');
+      }
+    } catch (e) {
+      print('Error in _refreshPcParts: $e'); // Debug logging
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error refreshing data: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    } finally {
+      Navigator.of(context).pop(); // Close the loading dialog
+      setState(() {
+        isRefreshing = false; // Reset refreshing state
       });
     }
   }
@@ -91,7 +167,7 @@ class _ViewPartsState extends State<ViewParts> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'PC BMA',
+                    'PC Parts',
                     style: TextStyle(
                       color: Color(0xFF010B73),
                       fontSize: 30.0,
@@ -105,9 +181,22 @@ class _ViewPartsState extends State<ViewParts> {
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => Navigator.pop(context),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          Icons.refresh,
+                          color: isRefreshing ? Colors.grey : Colors.blue,
+                        ),
+                        onPressed: isRefreshing ? null : _refreshPcParts,
+                        tooltip: 'Refresh PC Parts Data',
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -269,9 +358,9 @@ class _ViewPartsState extends State<ViewParts> {
                             ),
                             child: TextButton.icon(
                               icon: const Icon(Icons.sort_by_alpha, color: Colors.black),
-                              label: const Text(
-                                'Sort by Name',
-                                style: TextStyle(
+                              label: Text(
+                                isSortByNameAscending ? 'Sort by Name A-Z' : 'Sort by Name Z-A',
+                                style: const TextStyle(
                                   color: Colors.black,
                                   fontFamily: 'nasalization',
                                 ),
@@ -279,8 +368,10 @@ class _ViewPartsState extends State<ViewParts> {
                               onPressed: () {
                                 setState(() {
                                   sortBy = 'name';
-                                  pcParts.sort((a, b) => 
-                                    a['product_name'].compareTo(b['product_name']));
+                                  isSortByNameAscending = !isSortByNameAscending;
+                                  pcParts.sort((a, b) => isSortByNameAscending
+                                      ? a['product_name'].compareTo(b['product_name'])
+                                      : b['product_name'].compareTo(a['product_name']));
                                 });
                               },
                             ),
@@ -310,9 +401,9 @@ class _ViewPartsState extends State<ViewParts> {
                             ),
                             child: TextButton.icon(
                               icon: const Icon(Icons.monetization_on, color: Colors.black),
-                              label: const Text(
-                                'Sort by Price',
-                                style: TextStyle(
+                              label: Text(
+                                isSortByPriceAscending ? 'Sort by Price High to Low' : 'Sort by Price Low to High',
+                                style: const TextStyle(
                                   color: Colors.black,
                                   fontFamily: 'nasalization',
                                 ),
@@ -320,8 +411,10 @@ class _ViewPartsState extends State<ViewParts> {
                               onPressed: () {
                                 setState(() {
                                   sortBy = 'price';
-                                  pcParts.sort((a, b) => 
-                                    a['price'].compareTo(b['price']));
+                                  isSortByPriceAscending = !isSortByPriceAscending;
+                                  pcParts.sort((a, b) => isSortByPriceAscending
+                                      ? a['price'].compareTo(b['price'])
+                                      : b['price'].compareTo(a['price']));
                                 });
                               },
                             ),
@@ -365,6 +458,7 @@ class _ViewPartsState extends State<ViewParts> {
                                   ],
                                 ),
                                 child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
                                   leading: Container(
                                     width: 50,
                                     height: 50,
@@ -377,28 +471,39 @@ class _ViewPartsState extends State<ViewParts> {
                                       color: const Color(0xFF010B73),
                                     ),
                                   ),
-                                  title: Text(
-                                    part['product_name'] ?? 'Unknown Product',
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                      fontFamily: 'nasalization',
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    part['category'] ?? 'Uncategorized',
-                                    style: const TextStyle(
-                                      color: Colors.black87,
-                                      fontFamily: 'nasalization',
-                                    ),
-                                  ),
-                                  trailing: Text(
-                                    'RM${part['price'] ?? 'N/A'}',
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                      fontFamily: 'nasalization',
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  title: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        part['product_name'] ?? 'Unknown Product',
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontFamily: 'nasalization',
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10.0),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            part['category'] ?? 'Uncategorized',
+                                            style: const TextStyle(
+                                              color: Colors.black87,
+                                              fontFamily: 'nasalization',
+                                            ),
+                                          ),
+                                          Text(
+                                            'RM${part['price'] ?? 'N/A'}',
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontFamily: 'nasalization',
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                   onTap: () {
                                     _navigateToProductDetail(part);

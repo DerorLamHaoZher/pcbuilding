@@ -65,9 +65,12 @@ class _MyRegisterPageState extends State<MyRegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen size
+    final screenSize = MediaQuery.of(context).size;
+
     return Scaffold(
       body: Container(
-        padding: const EdgeInsets.all(10.0),
+        padding: EdgeInsets.all(screenSize.width * 0.05), // Responsive padding
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF08FFA2), Color(0xFF08BAFF)],
@@ -80,35 +83,51 @@ class _MyRegisterPageState extends State<MyRegisterPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                const Text(
+                Text(
                   'PC Building Mobile Application',
                   style: TextStyle(
-                    fontSize: 50.0,
+                    fontSize: screenSize.width * 0.1, // Responsive font size
                     fontFamily: 'bombardment',
-                    color: Color(0xFF010B73),
+                    color: const Color(0xFF010B73),
                     shadows: [
-                      Shadow(blurRadius: 4.0, color: Colors.black, offset: Offset(2.0, 2.0)),
+                      Shadow(blurRadius: 4.0, color: Colors.black, offset: const Offset(2.0, 2.0)),
                     ],
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text(
+                Text(
                   'Make PC building much easier!',
                   style: TextStyle(
-                    fontSize: 35.0,
+                    fontSize: screenSize.width * 0.07, // Responsive font size
                     fontFamily: 'Caveat',
-                    color: Color(0xFFFFFFFF),
+                    color: const Color(0xFFFFFFFF),
                     shadows: [
-                      Shadow(blurRadius: 4.0, color: Colors.black, offset: Offset(2.0, 2.0)),
+                      Shadow(blurRadius: 4.0, color: Colors.black, offset: const Offset(2.0, 2.0)),
                     ],
                   ),
                 ),
                 const SizedBox(height: 40),
                 TextField(
                   controller: _emailController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Email',
-                    border: OutlineInputBorder(),
+                    labelStyle: TextStyle(
+                      fontSize: screenSize.width * 0.05, // Responsive label size
+                      fontFamily: 'Caveat',
+                      color: const Color(0xFFFFFFFF),
+                      shadows: [
+                        Shadow(blurRadius: 4.0, color: Colors.black, offset: const Offset(2.0, 2.0)),
+                      ],
+                    ),
+                    border: const OutlineInputBorder(),
+                  ),
+                  style: TextStyle(
+                    fontSize: screenSize.width * 0.06, // Responsive text size
+                    fontFamily: 'nasalization',
+                    color: const Color(0xFF000000),
+                    shadows: [
+                      Shadow(blurRadius: 4.0, color: Colors.black, offset: const Offset(2.0, 2.0)),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -117,6 +136,14 @@ class _MyRegisterPageState extends State<MyRegisterPage> {
                   obscureText: _isObscured,
                   decoration: InputDecoration(
                     labelText: 'Password',
+                    labelStyle: TextStyle(
+                      fontSize: screenSize.width * 0.05, // Responsive label size
+                      fontFamily: 'Caveat',
+                      color: const Color(0xFFFFFFFF),
+                      shadows: [
+                        Shadow(blurRadius: 4.0, color: Colors.black, offset: const Offset(2.0, 2.0)),
+                      ],
+                    ),
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: Icon(_isObscured ? Icons.visibility : Icons.visibility_off),
@@ -126,6 +153,14 @@ class _MyRegisterPageState extends State<MyRegisterPage> {
                         });
                       },
                     ),
+                  ),
+                  style: TextStyle(
+                    fontSize: screenSize.width * 0.06, // Responsive text size
+                    fontFamily: 'nasalization',
+                    color: const Color(0xFF000000),
+                    shadows: [
+                      Shadow(blurRadius: 4.0, color: Colors.black, offset: const Offset(2.0, 2.0)),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 40),
@@ -150,16 +185,54 @@ class _MyRegisterPageState extends State<MyRegisterPage> {
                     onPressed: _register,
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 30.0),
-                      textStyle: const TextStyle(
+                      padding: EdgeInsets.symmetric(
+                        vertical: screenSize.height * 0.025, // Responsive vertical padding
+                        horizontal: screenSize.width * 0.1, // Responsive horizontal padding
+                      ),
+                      textStyle: TextStyle(
                         fontFamily: 'nasalization',
-                        fontSize: 25.0,
+                        fontSize: screenSize.width * 0.06, // Responsive button text size
                       ),
                     ),
                     child: const Text('Register'),
                   ),
                 ),
                 const SizedBox(height: 40.0),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFFFFF), Color(0xFFBDBCBC)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(30.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.5),
+                        spreadRadius: 0.5,
+                        blurRadius: 5,
+                        offset: const Offset(3, 3),
+                      ),
+                    ],
+                  ),
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.black,
+                      padding: EdgeInsets.symmetric(
+                        vertical: screenSize.height * 0.025, // Same vertical padding
+                        horizontal: screenSize.width * 0.1, // Same horizontal padding
+                      ),
+                      textStyle: TextStyle(
+                        fontFamily: 'nasalization',
+                        fontSize: screenSize.width * 0.06, // Same button text size
+                      ),
+                    ),
+                    child: const Text('Back'),
+                  ),
+                ),
               ],
             ),
           ),

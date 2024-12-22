@@ -5,6 +5,9 @@ import 'recommend.dart';
 import 'package:pc_bma/services/auth_service.dart';
 import 'viewsavedpc.dart';
 import 'main.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'viewsavedpcdetail.dart';
 
 void main() {
   runApp(const MyApp());
@@ -62,6 +65,38 @@ class MyMenuPage extends StatefulWidget {
 
 class _MyMenuPageState extends State<MyMenuPage> {
   final AuthService _authService = AuthService();
+  Map<String, dynamic>? _recentBuild;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRecentBuild();
+  }
+
+  Future<void> _fetchRecentBuild() async {
+    String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (uid.isNotEmpty) {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      List<dynamic> savedBuilds = userDoc['savedBuilds'] ?? [];
+
+      // Filter out builds without a valid createdAt timestamp
+      savedBuilds = savedBuilds.where((build) => build['createdAt'] != null).toList();
+
+      // Sort builds by createdAt timestamp (descending order)
+      savedBuilds.sort((a, b) {
+        String dateA = a['createdAt'].replaceAll(' – ', ' ');
+        String dateB = b['createdAt'].replaceAll(' – ', ' ');
+        return DateTime.parse(dateB).compareTo(DateTime.parse(dateA)); // Sort descending
+      });
+
+      // Get the most recent build
+      if (savedBuilds.isNotEmpty) {
+        setState(() {
+          _recentBuild = savedBuilds.first; // Store the most recent build
+        });
+      }
+    }
+  }
 
   void _logout() async {
     try {
@@ -171,6 +206,61 @@ class _MyMenuPageState extends State<MyMenuPage> {
             ),
             const SizedBox(height: 30.0),
 
+            // Container to display the most recent build
+            if (_recentBuild != null) 
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ViewSavedPCDetailPage(savedBuild: _recentBuild!),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(16.0),
+                  margin: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        spreadRadius: 2,
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Last Recent Build',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'nasalization',
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Name: ${_recentBuild!['name']}',
+                        style: TextStyle(
+                          fontFamily: 'nasalization',
+                        ),
+                      ),
+                      Text(
+                        'Created At: ${_recentBuild!['createdAt']}',
+                        style: TextStyle(
+                          fontFamily: 'nasalization',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
             // Scrollable content
             Expanded(
               child: SingleChildScrollView(
@@ -190,185 +280,18 @@ class _MyMenuPageState extends State<MyMenuPage> {
                   ),
                   child: Center(
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: <Widget>[
                         // Buttons
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF08FFA2),
-                                Color(0xFF08BAFF), // End color for gradient
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(30.0),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.5), // Shadow color
-                                spreadRadius: 0.5, // Spread of the shadow
-                                blurRadius: 5, // Blur intensity
-                                offset: const Offset(3, 3), // Shadow position offset (x, y)
-                              ),
-                            ],
-                          ),
-                          child: TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                    const MyTutorialPage(title: 'tutorial page')),
-                              );
-                            },
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.black, // Text color
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 20.0, horizontal: 30.0), // Adjust padding
-                              textStyle: const TextStyle(
-                                fontFamily: 'nasalization',
-                                fontSize: 25.0, // Adjust font size
-                              ),
-                            ),
-                            child: const Text('PC Building'),
-                          ),
-                        ),
-                        const SizedBox(height: 30.0),
-
-                        // Additional buttons...
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF08FFA2),
-                                Color(0xFF08BAFF), // End color for gradient
-                              ],
-                              begin: Alignment.bottomRight,
-                              end: Alignment.topLeft,
-                            ),
-                            borderRadius: BorderRadius.circular(30.0),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.5), // Shadow color
-                                spreadRadius: 0.5, // Spread of the shadow
-                                blurRadius: 5, // Blur intensity
-                                offset: const Offset(3, 3), // Shadow position offset (x, y)
-                              ),
-                            ],
-                          ),
-                          child: TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                    const ViewSavedPCPage()),
-                              );
-                            },
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.black, // Text color
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 20.0, horizontal: 30.0), // Adjust padding
-                              textStyle: const TextStyle(
-                                fontFamily: 'nasalization',
-                                fontSize: 25.0, // Adjust font size
-                              ),
-                            ),
-                            child: const Text('View Saved Build'),
-                          ),
-                        ),
-                        const SizedBox(height: 30.0),
-
-                        // More buttons...
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF08FFA2),
-                                Color(0xFF08BAFF), // End color for gradient
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(30.0),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.5), // Shadow color
-                                spreadRadius: 0.5, // Spread of the shadow
-                                blurRadius: 5, // Blur intensity
-                                offset: const Offset(3, 3), // Shadow position offset (x, y)
-                              ),
-                            ],
-                          ),
-                          child: TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const ViewParts(),
-                                ),
-                              );
-                            },
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.black, // Text color
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 30.0, horizontal: 30.0), // Adjust padding
-                              textStyle: const TextStyle(
-                                fontFamily: 'nasalization',
-                                fontSize: 25.0, // Adjust font size
-                              ),
-                            ),
-                            child: const Text('View PC Parts'),
-                          ),
-                        ),
-                        const SizedBox(height: 30.0),
-
-                        // Another button...
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF08FFA2),
-                                Color(0xFF08BAFF), // End color for gradient
-                              ],
-                              begin: Alignment.bottomRight,
-                              end: Alignment.topLeft,
-                            ),
-                            borderRadius: BorderRadius.circular(30.0),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.5), // Shadow color
-                                spreadRadius: 0.5, // Spread of the shadow
-                                blurRadius: 5, // Blur intensity
-                                offset: const Offset(3, 3), // Shadow position offset (x, y)
-                              ),
-                            ],
-                          ),
-                          child: TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const RecommendPage(),
-                                ),
-                              );
-                            },
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.black, // Text color
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 20.0, horizontal: 30.0), // Adjust padding
-                              textStyle: const TextStyle(
-                                fontFamily: 'nasalization',
-                                fontSize: 25.0, // Adjust font size
-                              ),
-                            ),
-                            child: const Text(
-                              'Recommended Build',
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
+                        const SizedBox(height: 20.0),
+                        _buildButton(context, 'PC Building', const MyTutorialPage(title: 'tutorial page')),
+                        const SizedBox(height: 40.0), // Gap between buttons
+                        _buildButton(context, 'View Saved Build', const ViewSavedPCPage()),
+                        const SizedBox(height: 40.0), // Gap between buttons
+                        _buildButton(context, 'View PC Parts', const ViewParts()),
+                        const SizedBox(height: 40.0), // Gap between buttons
+                        _buildButton(context, 'Recommended Build', const RecommendPage()),
+                        const SizedBox(height: 20.0),
                       ],
                     ),
                   ),
@@ -381,6 +304,50 @@ class _MyMenuPageState extends State<MyMenuPage> {
 
 
       // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+
+  Widget _buildButton(BuildContext context, String label, Widget page) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF08FFA2),
+            Color(0xFF08BAFF), // End color for gradient
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(30.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.5), // Shadow color
+            spreadRadius: 0.5, // Spread of the shadow
+            blurRadius: 5, // Blur intensity
+            offset: const Offset(3, 3), // Shadow position offset (x, y)
+          ),
+        ],
+      ),
+      child: TextButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => page,
+            ),
+          );
+        },
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.black, // Text color
+          padding: const EdgeInsets.symmetric(
+              vertical: 20.0, horizontal: 30.0), // Adjust padding
+          textStyle: const TextStyle(
+            fontFamily: 'nasalization',
+            fontSize: 25.0, // Adjust font size
+          ),
+        ),
+        child: Text(label),
+      ),
     );
   }
 }

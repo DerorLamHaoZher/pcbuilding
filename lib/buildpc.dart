@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'services/api_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
 import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import 'package:intl/intl.dart'; // Import for date formatting
 
 void main() {
   runApp(const MyApp());
@@ -189,10 +190,14 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
                       hintStyle: const TextStyle(
                         fontSize: 14.0,
                         overflow: TextOverflow.ellipsis,
+                        fontFamily: 'Nasalization',
                       ),
                       border: InputBorder.none,
                       prefixIcon: const Icon(Icons.search),
                       contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
+                    ),
+                    style: const TextStyle(
+                      fontFamily: 'Nasalization',
                     ),
                     onTap: () {
                       setState(() {
@@ -239,7 +244,9 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
                     setState(() {
                       isDropdownOpen[category] = !isDropdownOpen[category]!;
                       if (isDropdownOpen[category]!) {
-                        filteredResults[category] = filterParts(category, searchControllers[category]!.text);
+                        filteredResults[category] = filterParts(category, '');
+                      } else {
+                        filteredResults[category] = [];
                       }
                     });
                   },
@@ -266,16 +273,36 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
                       itemCount: filteredResults[category]!.length,
                       itemBuilder: (context, index) {
                         final part = filteredResults[category]![index];
-                        return ListTile(
-                          title: Text(part['product_name'] ?? ''),
-                          subtitle: Text('RM${part['price'] ?? ''}'),
-                          onTap: () {
-                            setState(() {
-                              onSelected(part);
-                              searchControllers[category]!.text = part['product_name'] ?? '';
-                              isDropdownOpen[category] = false;
-                            });
-                          },
+                        return Column(
+                          children: [
+                            ListTile(
+                              title: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    part['product_name'] ?? '',
+                                    style: const TextStyle(
+                                      fontFamily: 'Nasalization',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10.0), // Adjust height as needed
+                                  Text(
+                                    'RM${part['price'] ?? ''}',
+                                    style: const TextStyle(
+                                      fontFamily: 'Nasalization',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              onTap: () {
+                                setState(() {
+                                  onSelected(part);
+                                  searchControllers[category]!.text = part['product_name'] ?? '';
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 15.0), // Gap between items
+                          ],
                         );
                       },
                     ),
@@ -285,10 +312,11 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
               child: Text(
-                'Selected: ${selectedPart['name']} - ${selectedPart['price']}',
+                'Price: RM${selectedPart['price']}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.blue,
+                  fontFamily: 'Nasalization',
                 ),
               ),
             ),
@@ -385,10 +413,17 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
       'Others': selectedOthers,
     };
 
+    // Get the current timestamp as a formatted string
+    String createdAt = DateFormat('yyyy-MM-dd – HH:mm').format(DateTime.now());
+
     try {
       await userDoc.set({
         'savedBuilds': FieldValue.arrayUnion([
-          {'name': buildName, 'parts': selectedParts}
+          {
+            'name': buildName,
+            'parts': selectedParts,
+            'createdAt': createdAt, // Add the createdAt timestamp
+          }
         ])
       }, SetOptions(merge: true));
       
@@ -414,10 +449,11 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
       builder: (BuildContext context) {
         TextEditingController controller = TextEditingController();
         return AlertDialog(
-          title: const Text('Enter Build Name'),
+          title: const Text('Enter Build Name', style: TextStyle(fontFamily: 'Nasalization')),
           content: TextField(
             controller: controller,
             decoration: const InputDecoration(hintText: "Build Name"),
+            style: const TextStyle(fontFamily: 'Nasalization'),
           ),
           actions: <Widget>[
             TextButton(
@@ -425,7 +461,13 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
                 buildName = controller.text;
                 Navigator.of(context).pop(buildName);
               },
-              child: const Text('OK'),
+              child: const Text('OK', style: TextStyle(fontFamily: 'Nasalization')),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog without saving
+              },
+              child: const Text('Cancel', style: TextStyle(fontFamily: 'Nasalization')), // Add Cancel button
             ),
           ],
         );
@@ -473,7 +515,7 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'PC BMA',
+                        'PC Building',
                         style: TextStyle(
                           color: Color(0xFF010B73),
                           fontSize: 30.0,
@@ -552,7 +594,10 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _saveBuild,
-        child: const Icon(Icons.save),
+        child: const Icon(Icons.save, color: Colors.black),
+        backgroundColor: const Color(0xFF08FFA2),
+        tooltip: 'Save Your Build',
+        elevation: 6.0,
       ),
     );
   }
