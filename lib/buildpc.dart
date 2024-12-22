@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'services/api_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 
 void main() {
   runApp(const MyApp());
@@ -331,6 +333,107 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
     );
   }
 
+  Future<void> _saveBuild() async {
+    // Check if any parts are selected
+    if (selectedCPU.isEmpty && selectedMotherboard.isEmpty && selectedRAM.isEmpty &&
+        selectedGPU.isEmpty && selectedROM.isEmpty && selectedPSU.isEmpty &&
+        selectedCase.isEmpty && selectedCaseFan.isEmpty && selectedCooler.isEmpty &&
+        selectedOthers.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select at least one part before saving.')),
+        );
+      }
+      return; // Exit the method if no parts are selected
+    }
+
+    // Get the current user's UID
+    String uid = FirebaseAuth.instance.currentUser?.uid ?? ''; // Ensure the user is logged in
+    if (uid.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not logged in. Cannot save build.')),
+        );
+      }
+      return; // Exit if the user is not logged in
+    }
+
+    // Prompt user for build name
+    String? buildName = await _showBuildNameDialog();
+    if (buildName == null || buildName.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Build name cannot be empty.')),
+        );
+      }
+      return; // Exit if the build name is empty
+    }
+
+    DocumentReference userDoc = FirebaseFirestore.instance.collection('users').doc(uid);
+    
+    // Create a map of selected parts
+    Map<String, dynamic> selectedParts = {
+      'CPU': selectedCPU,
+      'Motherboard': selectedMotherboard,
+      'RAM': selectedRAM,
+      'GPU': selectedGPU,
+      'ROM': selectedROM,
+      'PSU': selectedPSU,
+      'Case': selectedCase,
+      'Case Fan': selectedCaseFan,
+      'CPU Cooler': selectedCooler,
+      'Others': selectedOthers,
+    };
+
+    try {
+      await userDoc.set({
+        'savedBuilds': FieldValue.arrayUnion([
+          {'name': buildName, 'parts': selectedParts}
+        ])
+      }, SetOptions(merge: true));
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Build saved successfully!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving build: $e')),
+        );
+      }
+    }
+  }
+
+  // Function to show dialog for entering build name
+  Future<String?> _showBuildNameDialog() async {
+    String? buildName;
+    await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        TextEditingController controller = TextEditingController();
+        return AlertDialog(
+          title: const Text('Enter Build Name'),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(hintText: "Build Name"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                buildName = controller.text;
+                Navigator.of(context).pop(buildName);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+    return buildName;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -395,8 +498,8 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
                             tooltip: 'Refresh PC Parts Data',
                           ),
                           IconButton(
-                            icon: const Icon(Icons.settings),
-                            onPressed: () {},
+                            icon: const Icon(Icons.arrow_back),
+                            onPressed: () {Navigator.of(context).pop();},
                           ),
                         ],
                       ),
@@ -446,6 +549,10 @@ class _MyBuildPCPageState extends State<MyBuildPCPage> {
               ),
             ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _saveBuild,
+        child: const Icon(Icons.save),
       ),
     );
   }

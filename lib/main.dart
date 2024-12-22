@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
 import 'package:pc_bma/menu.dart';
 import 'firebase_options.dart';
 import 'register.dart';
 import 'package:pc_bma/services/auth_service.dart';
 
-
-Future<void> main()async{
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(const MyApp());
-
 }
 
 class MyApp extends StatelessWidget {

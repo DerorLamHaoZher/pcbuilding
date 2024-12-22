@@ -2,25 +2,33 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-import time
+import chromedriver_autoinstaller
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from pymongo import MongoClient
-from datetime import datetime
-from bson import json_util  # Add this import at the top
-import json
+from datetime import datetime 
+import sqlite3
+import os
 
 app = Flask(__name__)
 CORS(app)
 
-# Update MongoDB setup with correct URL
-client = MongoClient('mongodb://localhost:27017/')  # MongoDB default port
-db = client['pc_parts_db']  # database name
-collection = db['products'] 
+# Create or connect to SQLite database
+db_path = os.path.join(os.getcwd(), 'pc_parts.db')
+conn = sqlite3.connect(db_path)
+cursor = conn.cursor()
 
-# Remove the CATEGORY_KEYWORDS dictionary and replace with category URLs
+# Create a table for products if it doesn't exist
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS products (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_name TEXT,
+    price TEXT,
+    category TEXT,
+    scraped_at TEXT
+)
+''')
+
+# Define category URLs
 CATEGORY_URLS = {
     "CPU": "https://www.racuntech.com/c/cpu",
     "Motherboard": "https://www.racuntech.com/c/motherboard",
@@ -35,15 +43,21 @@ CATEGORY_URLS = {
 
 def scrape_product_info():
     print("Starting web scraping...")
+    chromedriver_path = chromedriver_autoinstaller.install()
+    print(f"ChromeDriver installed at: {chromedriver_path}")
+
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.binary_location = "/Android/data/com.termux/files/usr/bin/chromium"  # Path to Chromium executable
+
+    driver = webdriver.Chrome(executable_path=chromedriver_path, options=options)
 
     product_data = []
     
     for category, urls in CATEGORY_URLS.items():
         if isinstance(urls, list):
-            # Handle multiple URLs for same category (like CPU Cooler)
             for url in urls:
                 scrape_category(driver, url, category, product_data)
         else:
@@ -91,15 +105,31 @@ def scrape_category(driver, base_url, category, product_data):
 
         page_num += 1
 
+def save_to_db(product_data):
+    cursor.executemany('''
+    INSERT INTO products (product_name, price, category, scraped_at) VALUES (?, ?, ?, ?)
+    ''', [(p['product_name'], p['price'], p['category'], p['scraped_at']) for p in product_data])
+    conn.commit()
+
 @app.route('/')
 def index():
     return "Welcome to the Product Info Scraper API!"
 
 @app.route('/products', methods=['GET'])
 def get_products():
+    query = request.args.get('q', '')
+    category = request.args.get('category', '')
+    
     try:
-        products = list(collection.find({}, {'_id': 0, 'product_name': 1, 'price': 1, 'category': 1}))
-        return json.loads(json_util.dumps(products))
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM products WHERE product_name LIKE ? AND category LIKE ?', (f'%{query}%', f'%{category}%'))
+        products = cursor.fetchall()
+        
+        conn.close()
+        
+        return jsonify([dict(row) for row in products])
     except Exception as e:
         print(f"Error in get_products: {e}")
         return jsonify({"error": str(e)}), 500
@@ -107,7 +137,7 @@ def get_products():
 @app.route('/scrape-status', methods=['GET'])
 def get_scrape_status():
     try:
-        count = collection.count_documents({})
+        count = cursor.execute('SELECT COUNT(*) FROM products').fetchone()[0]
         return jsonify({
             'has_data': count > 0,
             'total_products': count
@@ -123,15 +153,14 @@ def scrape():
         
         if products and len(products) > 0:
             print(f"Found {len(products)} products")
-            collection.delete_many({})
-            collection.insert_many(products)
+            cursor.execute('DELETE FROM products')  # Clear existing data
+            save_to_db(products)  # Save new data
             
-            # Use json_util to properly serialize MongoDB objects
-            return json.loads(json_util.dumps({
+            return jsonify({
                 "status": "success",
                 "message": f"Successfully scraped {len(products)} products",
                 "count": len(products)
-            }))
+            })
         else:
             print("No products found")
             return jsonify({
@@ -148,12 +177,12 @@ def scrape():
 @app.route('/check-db', methods=['GET'])
 def check_db():
     try:
-        count = collection.count_documents({})
-        sample = list(collection.find({}).limit(5))
-        for doc in sample:
-            doc['_id'] = str(doc['_id'])
+        cursor.execute('SELECT * FROM products LIMIT 5')
+        sample = cursor.fetchall()
+        for i, row in enumerate(sample):
+            sample[i] = dict(zip([column[0] for column in cursor.description], row))
         return jsonify({
-            'total_documents': count,
+            'total_documents': cursor.execute('SELECT COUNT(*) FROM products').fetchone()[0],
             'sample_data': sample
         })
     except Exception as e:
@@ -165,22 +194,13 @@ def search_products():
     category = request.args.get('category', '')
     
     try:
-        filter_query = {}
-        if category:
-            filter_query['category'] = category
-        if query:
-            filter_query['product_name'] = {'$regex': query, '$options': 'i'}
-            
-        products = list(collection.find(
-            filter_query,
-            {'_id': 0, 'product_name': 1, 'price': 1, 'category': 1}
-        ))
+        cursor.execute('SELECT * FROM products WHERE product_name LIKE ? AND category LIKE ?', (f'%{query}%', f'%{category}%'))
+        products = cursor.fetchall()
         return jsonify(products)
     except Exception as e:
         print(f"Error in search_products: {e}")
         return jsonify({"error": str(e)}), 500
 
-# Add CORS headers to allow the request
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
@@ -188,17 +208,21 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
+def get_db_connection():
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    return conn
+
 if __name__ == '__main__':
     print("Starting application...")
     
-    # Check if database already has data
     try:
-        count = collection.count_documents({})
+        count = cursor.execute('SELECT COUNT(*) FROM products').fetchone()[0]
         if count == 0:
             print("No data found in database. Running initial scrape...")
             products = scrape_product_info()
             if products:
-                collection.insert_many(products)
+                save_to_db(products)
                 print(f"Initial scrape completed. Saved {len(products)} products to database")
         else:
             print(f"Database already contains {count} products. Skipping initial scrape.")
@@ -206,5 +230,3 @@ if __name__ == '__main__':
         print(f"Error during database check: {e}")
     
     app.run(debug=True, host="0.0.0.0", port=5000)
-
-

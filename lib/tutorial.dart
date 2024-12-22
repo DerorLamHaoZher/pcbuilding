@@ -203,8 +203,10 @@ class _MyHomePageState extends State<MyTutorialPage> with SingleTickerProviderSt
               borderRadius: BorderRadius.circular(15),
             ),
             child: IconButton(
-              icon: const Icon(Icons.settings, color: Color(0xFF010B73)),
-              onPressed: () {},
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF010B73)),
+              onPressed: () {
+                Navigator.of(context).pop();
+                } // Navigate back to the previous screen},
             ),
           ),
         ],
